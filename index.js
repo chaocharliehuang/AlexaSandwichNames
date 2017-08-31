@@ -13,7 +13,7 @@
 const Alexa = require('alexa-sdk');
 const recipes = require('./recipes');
 
-const APP_ID = undefined; // TODO replace with your app ID (OPTIONAL).
+const APP_ID = "amzn1.ask.skill.f1fb96bc-d6c9-4dbc-9941-52243f367ed1";
 
 const languageStrings = {
     'en': {
@@ -42,12 +42,16 @@ const languageStrings = {
 };
 
 const handlers = {
+    //Use LaunchRequest, instead of NewSession if you want to use the one-shot model
+    // Alexa, ask [my-skill-invocation-name] to (do something)...
     'LaunchRequest': function () {
         this.attributes.speechOutput = this.t('WELCOME_MESSAGE', this.t('SKILL_NAME'));
         // If the user either does not reply to the welcome message or says something that is not
         // understood, they will be prompted again with this text.
         this.attributes.repromptSpeech = this.t('WELCOME_REPROMPT');
-        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+
+        this.response.speak(this.attributes.speechOutput).listen(this.attributes.repromptSpeech);
+        this.emit(':responseReady');
     },
     'RecipeIntent': function () {
         const itemSlot = this.event.request.intent.slots.Item;
@@ -63,7 +67,10 @@ const handlers = {
         if (recipe) {
             this.attributes.speechOutput = recipe;
             this.attributes.repromptSpeech = this.t('RECIPE_REPEAT_MESSAGE');
-            this.emit(':askWithCard', recipe, this.attributes.repromptSpeech, cardTitle, recipe);
+
+            this.response.speak(recipe).listen(this.attributes.repromptSpeech);
+            this.response.cardRenderer(cardTitle, recipe);
+            this.emit(':responseReady');
         } else {
             let speechOutput = this.t('RECIPE_NOT_FOUND_MESSAGE');
             const repromptSpeech = this.t('RECIPE_NOT_FOUND_REPROMPT');
@@ -77,16 +84,20 @@ const handlers = {
             this.attributes.speechOutput = speechOutput;
             this.attributes.repromptSpeech = repromptSpeech;
 
-            this.emit(':ask', speechOutput, repromptSpeech);
+            this.response.speak(speechOutput).listen(repromptSpeech);
+            this.emit(':responseReady');
         }
     },
     'AMAZON.HelpIntent': function () {
         this.attributes.speechOutput = this.t('HELP_MESSAGE');
         this.attributes.repromptSpeech = this.t('HELP_REPROMPT');
-        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+
+        this.response.speak(this.attributes.speechOutput).listen(this.attributes.repromptSpeech);
+        this.emit(':responseReady');
     },
     'AMAZON.RepeatIntent': function () {
-        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+        this.response.speak(this.attributes.speechOutput).listen(this.attributes.repromptSpeech);
+        this.emit(':responseReady');
     },
     'AMAZON.StopIntent': function () {
         this.emit('SessionEndedRequest');
@@ -100,12 +111,13 @@ const handlers = {
     'Unhandled': function () {
         this.attributes.speechOutput = this.t('HELP_MESSAGE');
         this.attributes.repromptSpeech = this.t('HELP_REPROMPT');
-        this.emit(':ask', this.attributes.speechOutput, this.attributes.repromptSpeech);
+        this.response.speak(this.attributes.speechOutput).listen(this.attributes.repromptSpeech);
+        this.emit(':responseReady');
     },
 };
 
-exports.handler = function (event, context) {
-    const alexa = Alexa.handler(event, context);
+exports.handler = function (event, context, callback) {
+    const alexa = Alexa.handler(event, context, callback);
     alexa.APP_ID = APP_ID;
     // To enable string internationalization (i18n) features, set a resources object.
     alexa.resources = languageStrings;
