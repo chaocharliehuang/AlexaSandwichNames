@@ -65,10 +65,12 @@ const handlers = {
         const recipe = myRecipes[itemName];
 
         if (recipe) {
-            this.attributes.speechOutput = recipe;
+            const speechOutput = recipe + " " + this.t('RECIPE_NOT_FOUND_REPROMPT');
+            
+            this.attributes.speechOutput = speechOutput;
             this.attributes.repromptSpeech = this.t('RECIPE_REPEAT_MESSAGE');
 
-            this.response.speak(recipe).listen(this.attributes.repromptSpeech);
+            this.response.speak(speechOutput).listen(this.attributes.repromptSpeech);
             this.response.cardRenderer(cardTitle, recipe);
             this.emit(':responseReady');
         } else {
